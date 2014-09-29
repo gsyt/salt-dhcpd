@@ -1,8 +1,8 @@
-{% set dhcp  = salt['grains.filter_by']( {
+{% set dhcpd  = salt['grains.filter_by']( {
   'RedHat': {
     'dependencies': ['python-augeas', 'augeas'],
     'package': 'dhcp',
     'service': 'dhcpd',
     'config': '/etc/dhcp/dhcpd.conf',
   },
-}, merge=salt['pillar.get']('dhcp:lookup')) %}
+}, merge=salt['pillar.get']('dhcpd:lookup')) %}
