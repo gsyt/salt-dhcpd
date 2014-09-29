@@ -15,7 +15,7 @@
     'manage': salt['pillar.get']('dhcpd:config:manage', False), 
     'dependencies': dhcpd.dependencies,
     'file': dhcpd.config,
-    'require: salt['pillar.get']('dhcpd:config:require', False), 
+    'require': salt['pillar.get']('dhcpd:config:require', False), 
     'networks': salt['pillar.get']('dhcpd:config:networks', False),
     'keys': salt['pillar.get']('dhcpd:config:keys', False),
     'omapi': {
