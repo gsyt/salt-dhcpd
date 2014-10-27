@@ -1,47 +1,41 @@
 {% from "dhcpd/map.jinja" import dhcpd with context %}
 
+{% set require = salt['pillar.get']('dhcpd:require', []) %}
+
 {% set package = {
-    'name': dhcpd.package,
-    'upgrade': salt['pillar.get']('dhcpd:package:upgrade', False),
+  'name': dhcpd.package,
+  'upgrade': salt['pillar.get']('dhcpd:package:upgrade', False),
 } %}
 
 {% set service = {
-    'name': dhcpd.service,
-    'manage': salt['pillar.get']('dhcpd:service:manage', False), 
-    'enable': salt['pillar.get']('dhcpd:service:enable', True), 
+  'name': dhcpd.service,
+  'manage': salt['pillar.get']('dhcpd:service:manage', False), 
+  'enable': salt['pillar.get']('dhcpd:service:enable', True), 
 } %}
 
 {% set config = {
-    'manage': salt['pillar.get']('dhcpd:config:manage', False), 
-    'dependencies': dhcpd.dependencies,
-    'file': dhcpd.config,
-    'require': salt['pillar.get']('dhcpd:config:require', False), 
-    'networks': salt['pillar.get']('dhcpd:config:networks', False),
-    'keys': salt['pillar.get']('dhcpd:config:keys', False),
-    'omapi': {
-      'enable': salt['pillar.get']('dhcpd:config:omapi:enable', False),
-      'key': salt['pillar.get']('dhcpd:config:omapi:key', False),
-    },
+  'manage': salt['pillar.get']('dhcpd:config:manage', False), 
+  'file': dhcpd.config,
+  'contents': salt['pillar.get']('dhcpd:config:contents', ''),
+  'source': salt['pillar.get']('dhcpd:config:source', 'salt://dhcpd/conf/dhcpd.conf'),
+  'networks': salt['pillar.get']('dhcpd:config:networks', []),
+  'zones': salt['pillar.get']('dhcpd:config:zones', []),
+  'keys': salt['pillar.get']('dhcpd:config:omapi:keys', []),
 } %}
-
-{% if config.manage %}
-include:
-  - dhcpd.dependencies
-{% endif %}
 
 dhcpd.installed:
   require:
     - sls: dhcpd.pkg
+{% if require %}
+  {% for sls in require %}
+    - sls: {{ sls }}
+  {% endfor %}
+{% endif %}
 {% if service.manage %}
     - sls: dhcpd.service
 {% endif %}
 {% if config.manage %}
     - sls: dhcpd.config
-{% endif %}
-{% if config.require %}
-  {% for sls in config.require %}
-    - sls: {{ sls }}
-  {% endfor %}
 {% endif %}
 
 dhcpd.pkg:
@@ -67,14 +61,12 @@ dhcpd.service:
 
 {% if config.manage %}
 dhcpd.config:
-  require:
-  {% for dependency in config.dependencies %}
-    - pkg: config.dependency.{{ dependency }} 
-  {% endfor %}
+  file.managed:
+    - name: {{ config.file }}
+    - template: jinja
+  {% if config.contents %}
+    - contents_pillar: dhcpd:config:contents
+  {% else %}
+    - source: {{ config.source }}
+  {% endif %}
 {% endif %}
-
-{% for dependency in config.dependencies %}
-config.dependency.{{ dependency }}:
-  pkg.{{ 'latest' if package.upgrade else 'installed' }}:
-    - name: {{ dependency }}  
-{% endfor %}

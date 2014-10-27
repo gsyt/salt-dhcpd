@@ -1,22 +1,22 @@
 dhcpd:
   package:
     upgrade: False
+  require:
+    - autofs
   service:
     manage: False
     enable: True
   config:
     manage: False
-    require:
-      - autofs
+    options:
+      - ddns-update-style interim
     networks:
       trust:
         address: 192.168.0.0
         netmask: 255.255.255.0
-        range:
-          - 192.168.0.2 192.168.0.254
         options:
-          - router 192.168.0.1
-          - domain name servers 192.168.0.1
+          - option router 192.168.0.1
+          - options domain-name-servers 192.168.0.1
     zones:
       test1.example.org:
         primary: ns01.example.org
@@ -35,12 +35,8 @@ dhcpd:
         algorithm: HMAC-MD5
         secret: zzzzzzz
     omapi:
-      enable: False
       key: key03
   lookup:
-    dependencies:
-      - python-augeas
-      - augeas
     package: dhcp
     service: dhcpd
     config: /etc/dhcp/dhcpd.conf
