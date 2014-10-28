@@ -34,6 +34,10 @@ dhcpd:
       key03:
         algorithm: HMAC-MD5
         secret: zzzzzzz
+    hosts:
+      host01:
+        - hardware ethernet aa:bb:cc:dd:ee:ff
+        - fixed-address 192.168.0.2
     omapi:
       key: key03
   lookup:
